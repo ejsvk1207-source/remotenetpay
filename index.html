@@ -3,133 +3,223 @@
 <head>
   <meta charset="UTF-8" />
   <title>Global Remote Net Salary Calculator</title>
-  <meta name="description" content="Simple net salary calculator for remote workers. Estimate your take-home pay after tax." />
+  <meta name="description" content="Simple net salary calculator for remote workers and freelancers. Estimate your take-home pay after tax in multiple countries.">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-    h1 { font-size: 24px; }
-    .card { border: 1px solid #ddd; padding: 16px; border-radius: 8px; margin-bottom: 16px; }
-    label { display: block; margin-top: 8px; }
-    input, select { width: 100%; padding: 8px; margin-top: 4px; }
-    button { margin-top: 12px; padding: 10px 16px; cursor: pointer; }
-    .result { margin-top: 12px; font-weight: bold; }
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color-scheme: light dark;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 16px;
+      max-width: 900px;
+      margin-inline: auto;
+      line-height: 1.5;
+    }
+    h1 { font-size: 24px; margin-bottom: 8px; }
+    h2 { font-size: 18px; margin-top: 24px; }
+    .card {
+      border: 1px solid #444;
+      border-radius: 10px;
+      padding: 16px;
+      margin: 16px 0;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: 600;
+    }
+    select, input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      border-radius: 6px;
+      border: 1px solid #666;
+      background: transparent;
+      color: inherit;
+    }
+    button {
+      margin-top: 14px;
+      padding: 10px 18px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    .result {
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px dashed #555;
+      font-weight: 500;
+    }
+    .small {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 13px;
+    }
+    th, td {
+      border: 1px solid #555;
+      padding: 6px 8px;
+      text-align: left;
+    }
   </style>
 </head>
 <body>
-  <h1>Global Remote Net Salary Calculator (Simple Beta)</h1>
+  <h1>Global Remote Net Salary Calculator</h1>
+  <p class="small">
+    Beta tool to roughly estimate net salary for remote workers and freelancers
+    in different countries. Numbers are simplified and not tax advice.
+  </p>
+
   <div class="card">
-    <label for="country">Country (v0: Germany only)</label>
+    <label for="country">Country</label>
     <select id="country">
+      <option value="us">United States</option>
       <option value="de">Germany</option>
+      <option value="uk">United Kingdom</option>
+      <option value="ca">Canada</option>
+      <option value="au">Australia</option>
+      <option value="jp">Japan</option>
+      <option value="kr">South Korea</option>
+      <option value="sg">Singapore</option>
+      <option value="fr">France</option>
+      <option value="es">Spain</option>
     </select>
 
-    <label for="grossSalary">Annual Gross Salary (EUR)</label>
-    <input type="number" id="grossSalary" placeholder="e.g. 80000" />
+    <label for="gross">Annual gross salary (in local currency)</label>
+    <input id="gross" type="number" placeholder="e.g. 80000" />
 
-    <label for="employmentType">Employment Type</label>
-    <select id="employmentType">
+    <label for="type">Employment type</label>
+    <select id="type">
       <option value="employee">Employee</option>
-      <option value="freelancer">Freelancer</option>
+      <option value="freelancer">Freelancer / Contractor</option>
     </select>
 
-    <button onclick="calculateNet()">Calculate Net Salary</button>
+    <button onclick="calculateNet()">Calculate net salary</button>
 
-    <div class="result" id="result"></div>
+    <div id="result" class="result"></div>
+    <p class="small">
+      Very simplified model. Real tax depends on many more factors.
+    </p>
   </div>
 
-<script>
-  // 1) URL에서 country 파라미터 읽기
-  function getCountryFromQuery() {
-    const params = new URLSearchParams(window.location.search);
-    const c = params.get('country');
-    if (!c) return 'de'; // 기본: 독일
-    return c.toLowerCase();
-  }
+  <h2>Quick examples</h2>
+  <p class="small">
+    Use these as rough benchmarks. For accurate results, always use the calculator above.
+  </p>
 
-  // 2) 국가 셀렉트 초기화
-  function initCountrySelect() {
-    var select = document.getElementById('country');
-    var qCountry = getCountryFromQuery();
+  <table>
+    <thead>
+      <tr>
+        <th>Gross salary</th>
+        <th>Typical remote level</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>40,000</td>
+        <td>Entry / junior</td>
+      </tr>
+      <tr>
+        <td>60,000</td>
+        <td>Mid-level</td>
+      </tr>
+      <tr>
+        <td>80,000</td>
+        <td>Senior</td>
+      </tr>
+      <tr>
+        <td>100,000+</td>
+        <td>Lead / specialist</td>
+      </tr>
+    </tbody>
+  </table>
 
-    for (var i = 0; i < select.options.length; i++) {
-      if (select.options[i].value.toLowerCase() === qCountry) {
-        select.selectedIndex = i;
-        break;
+  <script>
+    // 1) URL에서 country 파라미터 읽기 (?country=us 같은 것)
+    function getCountryFromQuery() {
+      const params = new URLSearchParams(window.location.search);
+      const c = params.get('country');
+      return c ? c.toLowerCase() : null;
+    }
+
+    // 2) 매우 단순화된 국가별 세율 설정 (대략적인 감만 보기용)
+    const taxConfig = {
+      us: { name: "United States", taxRate: 0.24, socialRate: 0.10 },
+      de: { name: "Germany",       taxRate: 0.30, socialRate: 0.20 },
+      uk: { name: "United Kingdom",taxRate: 0.28, socialRate: 0.12 },
+      ca: { name: "Canada",        taxRate: 0.26, socialRate: 0.12 },
+      au: { name: "Australia",     taxRate: 0.25, socialRate: 0.10 },
+      jp: { name: "Japan",         taxRate: 0.22, socialRate: 0.13 },
+      kr: { name: "South Korea",   taxRate: 0.22, socialRate: 0.09 },
+      sg: { name: "Singapore",     taxRate: 0.12, socialRate: 0.07 },
+      fr: { name: "France",        taxRate: 0.28, socialRate: 0.20 },
+      es: { name: "Spain",         taxRate: 0.24, socialRate: 0.16 },
+    };
+
+    const genericConfig = { taxRate: 0.25, socialRate: 0.15 };
+
+    function initCountrySelect() {
+      const select = document.getElementById("country");
+      const fromQuery = getCountryFromQuery();
+      if (!fromQuery) return;
+      for (let i = 0; i < select.options.length; i++) {
+        if (select.options[i].value.toLowerCase() === fromQuery) {
+          select.selectedIndex = i;
+          break;
+        }
       }
     }
-  }
 
-  // 3) 세금/사회보장 대략 값 (진짜 세무 아님, 예시용)
-  //    나중에 시간 나면 나라별로 조금씩 손봐도 되고,
-  //    일단은 "대략적인 시뮬레이션" 느낌으로 가자.
-  const taxConfig = {
-    de: { taxRate: 0.30, socialRate: 0.20 }, // Germany
-    jp: { taxRate: 0.25, socialRate: 0.15 }, // Japan
-    uk: { taxRate: 0.28, socialRate: 0.18 }, // United Kingdom
-    us: { taxRate: 0.24, socialRate: 0.12 }, // United States (대략)
-    ca: { taxRate: 0.26, socialRate: 0.14 }, // Canada
-    au: { taxRate: 0.25, socialRate: 0.10 }, // Australia
-    fr: { taxRate: 0.28, socialRate: 0.20 }, // France
-    es: { taxRate: 0.24, socialRate: 0.18 }, // Spain
-    pt: { taxRate: 0.23, socialRate: 0.18 }, // Portugal
-    nl: { taxRate: 0.28, socialRate: 0.18 }, // Netherlands
-    se: { taxRate: 0.30, socialRate: 0.18 }, // Sweden
-    no: { taxRate: 0.30, socialRate: 0.16 }, // Norway
-    dk: { taxRate: 0.32, socialRate: 0.16 }, // Denmark
-    fi: { taxRate: 0.28, socialRate: 0.18 }, // Finland
-    ch: { taxRate: 0.20, socialRate: 0.12 }, // Switzerland
-    sg: { taxRate: 0.15, socialRate: 0.10 }, // Singapore
-    kr: { taxRate: 0.24, socialRate: 0.09 }, // South Korea
-    // 기타: 지정 안 된 코드는 아래 generic으로 처리
-  };
+    function calculateNet() {
+      const countryCode = document.getElementById("country").value.toLowerCase();
+      const gross = parseFloat(document.getElementById("gross").value || "0");
+      const type = document.getElementById("type").value;
+      const result = document.getElementById("result");
 
-  const genericConfig = { taxRate: 0.25, socialRate: 0.15 };
+      if (!gross || gross <= 0) {
+        result.textContent = "Please enter a valid gross salary.";
+        return;
+      }
 
-  // 4) 계산 함수
-  function calculateNet() {
-    var country = document.getElementById('country').value.toLowerCase();
-    var gross = parseFloat(document.getElementById('grossSalary').value || 0);
-    var type = document.getElementById('employmentType').value;
-    var resultDiv = document.getElementById('result');
+      const cfg = taxConfig[countryCode] || genericConfig;
+      let taxRate = cfg.taxRate;
+      let socialRate = cfg.socialRate;
 
-    if (!gross || gross <= 0) {
-      resultDiv.textContent = "Please enter a valid gross salary.";
-      return;
+      // 프리랜서는 사회보장율 조금 낮게 가정
+      if (type === "freelancer") {
+        socialRate = socialRate * 0.6;
+      }
+
+      const tax = gross * taxRate;
+      const social = gross * socialRate;
+      const net = gross - tax - social;
+
+      const monthly = net / 12;
+      const weekly = net / 52;
+      const daily = net / 260;
+      const effective = (1 - net / gross) * 100;
+
+      result.innerHTML = `
+        <div>Estimated <strong>annual net salary</strong>: ${net.toFixed(2)}</div>
+        <div>Monthly net: ${monthly.toFixed(2)}</div>
+        <div>Weekly net: ${weekly.toFixed(2)}</div>
+        <div>Daily net (approx.): ${daily.toFixed(2)}</div>
+        <div style="margin-top:6px;">Approx. total deduction rate: ${effective.toFixed(1)}%</div>
+      `;
     }
 
-    const cfg = taxConfig[country] || genericConfig;
-
-    var taxRate = cfg.taxRate;
-    var socialRate = cfg.socialRate;
-
-    // 프리랜서는 사회보장 조금 덜 낸다고 가정
-    if (type === 'freelancer') {
-      socialRate = socialRate * 0.6;
-    }
-
-    var tax = gross * taxRate;
-    var social = gross * socialRate;
-    var net = gross - tax - social;
-
-    var monthlyNet = net / 12;
-    var weeklyNet = net / 52;
-    var dailyNet = net / 260; // 근무일 기준 대략
-    var effectiveRate = (1 - net / gross) * 100;
-
-    resultDiv.innerHTML = `
-      Estimated annual net salary: ${net.toFixed(2)}<br/>
-      Monthly net salary: ${monthlyNet.toFixed(2)}<br/>
-      Weekly net salary: ${weeklyNet.toFixed(2)}<br/>
-      Daily net salary: ${dailyNet.toFixed(2)}<br/>
-      Approx. total deduction rate: ${effectiveRate.toFixed(1)}%
-    `;
-  }
-
-  // 페이지 로드 시 초기화
-  window.onload = function() {
-    initCountrySelect();
-  };
-</script>
-
+    window.onload = initCountrySelect;
+  </script>
 </body>
 </html>
