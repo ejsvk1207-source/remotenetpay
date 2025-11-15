@@ -37,38 +37,99 @@
     <div class="result" id="result"></div>
   </div>
 
-  <script>
-    // 매우 단순화된 독일 세금 로직 (예시용, 실제와 다름)
-    function calculateNet() {
-      var country = document.getElementById('country').value;
-      var gross = parseFloat(document.getElementById('grossSalary').value || 0);
-      var type = document.getElementById('employmentType').value;
-      var resultDiv = document.getElementById('result');
+<script>
+  // 1) URL에서 country 파라미터 읽기
+  function getCountryFromQuery() {
+    const params = new URLSearchParams(window.location.search);
+    const c = params.get('country');
+    if (!c) return 'de'; // 기본: 독일
+    return c.toLowerCase();
+  }
 
-      if (!gross || gross <= 0) {
-        resultDiv.textContent = "Please enter a valid gross salary.";
-        return;
+  // 2) 국가 셀렉트 초기화
+  function initCountrySelect() {
+    var select = document.getElementById('country');
+    var qCountry = getCountryFromQuery();
+
+    for (var i = 0; i < select.options.length; i++) {
+      if (select.options[i].value.toLowerCase() === qCountry) {
+        select.selectedIndex = i;
+        break;
       }
-
-      var taxRate = 0.3; // 기본 세율 30% 가정
-      var socialRate = 0.2; // 사회보장 20% 가정
-      if (type === 'freelancer') {
-        socialRate = 0.1; // 프리랜서는 사회보장 적게 내는 식으로 단순 가정
-      }
-
-      var tax = gross * taxRate;
-      var social = gross * socialRate;
-      var net = gross - tax - social;
-
-      var monthlyNet = net / 12;
-      var effectiveRate = (1 - net / gross) * 100;
-
-      resultDiv.innerHTML = `
-        Estimated annual net salary: ${net.toFixed(2)} EUR <br/>
-        Monthly net salary: ${monthlyNet.toFixed(2)} EUR <br/>
-        Approx. total deduction rate: ${effectiveRate.toFixed(1)}%
-      `;
     }
-  </script>
+  }
+
+  // 3) 세금/사회보장 대략 값 (진짜 세무 아님, 예시용)
+  //    나중에 시간 나면 나라별로 조금씩 손봐도 되고,
+  //    일단은 "대략적인 시뮬레이션" 느낌으로 가자.
+  const taxConfig = {
+    de: { taxRate: 0.30, socialRate: 0.20 }, // Germany
+    jp: { taxRate: 0.25, socialRate: 0.15 }, // Japan
+    uk: { taxRate: 0.28, socialRate: 0.18 }, // United Kingdom
+    us: { taxRate: 0.24, socialRate: 0.12 }, // United States (대략)
+    ca: { taxRate: 0.26, socialRate: 0.14 }, // Canada
+    au: { taxRate: 0.25, socialRate: 0.10 }, // Australia
+    fr: { taxRate: 0.28, socialRate: 0.20 }, // France
+    es: { taxRate: 0.24, socialRate: 0.18 }, // Spain
+    pt: { taxRate: 0.23, socialRate: 0.18 }, // Portugal
+    nl: { taxRate: 0.28, socialRate: 0.18 }, // Netherlands
+    se: { taxRate: 0.30, socialRate: 0.18 }, // Sweden
+    no: { taxRate: 0.30, socialRate: 0.16 }, // Norway
+    dk: { taxRate: 0.32, socialRate: 0.16 }, // Denmark
+    fi: { taxRate: 0.28, socialRate: 0.18 }, // Finland
+    ch: { taxRate: 0.20, socialRate: 0.12 }, // Switzerland
+    sg: { taxRate: 0.15, socialRate: 0.10 }, // Singapore
+    kr: { taxRate: 0.24, socialRate: 0.09 }, // South Korea
+    // 기타: 지정 안 된 코드는 아래 generic으로 처리
+  };
+
+  const genericConfig = { taxRate: 0.25, socialRate: 0.15 };
+
+  // 4) 계산 함수
+  function calculateNet() {
+    var country = document.getElementById('country').value.toLowerCase();
+    var gross = parseFloat(document.getElementById('grossSalary').value || 0);
+    var type = document.getElementById('employmentType').value;
+    var resultDiv = document.getElementById('result');
+
+    if (!gross || gross <= 0) {
+      resultDiv.textContent = "Please enter a valid gross salary.";
+      return;
+    }
+
+    const cfg = taxConfig[country] || genericConfig;
+
+    var taxRate = cfg.taxRate;
+    var socialRate = cfg.socialRate;
+
+    // 프리랜서는 사회보장 조금 덜 낸다고 가정
+    if (type === 'freelancer') {
+      socialRate = socialRate * 0.6;
+    }
+
+    var tax = gross * taxRate;
+    var social = gross * socialRate;
+    var net = gross - tax - social;
+
+    var monthlyNet = net / 12;
+    var weeklyNet = net / 52;
+    var dailyNet = net / 260; // 근무일 기준 대략
+    var effectiveRate = (1 - net / gross) * 100;
+
+    resultDiv.innerHTML = `
+      Estimated annual net salary: ${net.toFixed(2)}<br/>
+      Monthly net salary: ${monthlyNet.toFixed(2)}<br/>
+      Weekly net salary: ${weeklyNet.toFixed(2)}<br/>
+      Daily net salary: ${dailyNet.toFixed(2)}<br/>
+      Approx. total deduction rate: ${effectiveRate.toFixed(1)}%
+    `;
+  }
+
+  // 페이지 로드 시 초기화
+  window.onload = function() {
+    initCountrySelect();
+  };
+</script>
+
 </body>
 </html>
