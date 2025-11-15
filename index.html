@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Global Remote Net Salary Calculator</title>
+  <meta name="description" content="Simple net salary calculator for remote workers. Estimate your take-home pay after tax." />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+    h1 { font-size: 24px; }
+    .card { border: 1px solid #ddd; padding: 16px; border-radius: 8px; margin-bottom: 16px; }
+    label { display: block; margin-top: 8px; }
+    input, select { width: 100%; padding: 8px; margin-top: 4px; }
+    button { margin-top: 12px; padding: 10px 16px; cursor: pointer; }
+    .result { margin-top: 12px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Global Remote Net Salary Calculator (Simple Beta)</h1>
+  <div class="card">
+    <label for="country">Country (v0: Germany only)</label>
+    <select id="country">
+      <option value="de">Germany</option>
+    </select>
+
+    <label for="grossSalary">Annual Gross Salary (EUR)</label>
+    <input type="number" id="grossSalary" placeholder="e.g. 80000" />
+
+    <label for="employmentType">Employment Type</label>
+    <select id="employmentType">
+      <option value="employee">Employee</option>
+      <option value="freelancer">Freelancer</option>
+    </select>
+
+    <button onclick="calculateNet()">Calculate Net Salary</button>
+
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    // 매우 단순화된 독일 세금 로직 (예시용, 실제와 다름)
+    function calculateNet() {
+      var country = document.getElementById('country').value;
+      var gross = parseFloat(document.getElementById('grossSalary').value || 0);
+      var type = document.getElementById('employmentType').value;
+      var resultDiv = document.getElementById('result');
+
+      if (!gross || gross <= 0) {
+        resultDiv.textContent = "Please enter a valid gross salary.";
+        return;
+      }
+
+      var taxRate = 0.3; // 기본 세율 30% 가정
+      var socialRate = 0.2; // 사회보장 20% 가정
+      if (type === 'freelancer') {
+        socialRate = 0.1; // 프리랜서는 사회보장 적게 내는 식으로 단순 가정
+      }
+
+      var tax = gross * taxRate;
+      var social = gross * socialRate;
+      var net = gross - tax - social;
+
+      var monthlyNet = net / 12;
+      var effectiveRate = (1 - net / gross) * 100;
+
+      resultDiv.innerHTML = `
+        Estimated annual net salary: ${net.toFixed(2)} EUR <br/>
+        Monthly net salary: ${monthlyNet.toFixed(2)} EUR <br/>
+        Approx. total deduction rate: ${effectiveRate.toFixed(1)}%
+      `;
+    }
+  </script>
+</body>
+</html>
