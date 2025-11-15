@@ -31,7 +31,7 @@
       margin-top: 10px;
       font-weight: 600;
     }
-    select, input {
+    input {
       width: 100%;
       padding: 8px;
       margin-top: 4px;
@@ -72,30 +72,90 @@
       padding: 6px 8px;
       text-align: left;
     }
-    <style>
-  select {
-    color: #000 !important;          /* 선택된 옵션 텍스트 */
-    background: #fff !important;     /* 박스 배경 */
-  }
 
-  select option {
-    color: #000 !important;          /* 옵션 리스트 텍스트 */
-    background: #fff !important;     /* 옵션 배경 */
-  }
-
-  /* 다크모드 충돌 방지 */
-  @media (prefers-color-scheme: dark) {
-    select {
-      color: #fff !important;
-      background: #222 !important;
+    /* 숨겨진 실제 select (로직용) */
+    #country {
+      display: none;
     }
-    select option {
-      color: #fff !important;
-      background: #222 !important;
-    }
-  }
-</style>
 
+    /* 커스텀 드롭다운 */
+    .dropdown {
+      position: relative;
+      margin-top: 4px;
+    }
+    .dropdown-trigger {
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #666;
+      background: transparent;
+      color: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .dropdown-trigger span {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    .dropdown-trigger svg {
+      flex-shrink: 0;
+      margin-left: 8px;
+    }
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      max-height: 220px;
+      overflow-y: auto;
+      border-radius: 8px;
+      border: 1px solid #666;
+      background: #fff;
+      color: #000;
+      margin-top: 4px;
+      z-index: 10;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+      display: none;
+    }
+    .dropdown.open .dropdown-menu {
+      display: block;
+    }
+    .dropdown-item {
+      padding: 8px 12px;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .dropdown-item:hover {
+      background: #f0f0f0;
+    }
+    .dropdown-item small {
+      font-size: 11px;
+      opacity: 0.7;
+      margin-left: 8px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body { background: #111; color: #eee; }
+      .card { border-color: #555; }
+      input { border-color: #777; }
+      .dropdown-trigger { border-color: #777; }
+      .dropdown-menu {
+        background: #222;
+        color: #fff;
+        border-color: #777;
+      }
+      .dropdown-item:hover {
+        background: #333;
+      }
+      th, td { border-color: #666; }
+    }
   </style>
 </head>
 <body>
@@ -107,6 +167,8 @@
 
   <div class="card">
     <label for="country">Country</label>
+
+    <!-- 실제 값은 여기서 관리 (숨김) -->
     <select id="country">
       <option value="us">United States</option>
       <option value="de">Germany</option>
@@ -119,6 +181,48 @@
       <option value="fr">France</option>
       <option value="es">Spain</option>
     </select>
+
+    <!-- 화면에 보이는 커스텀 드롭다운 -->
+    <div class="dropdown" id="countryDropdown">
+      <button type="button" class="dropdown-trigger" id="countryTrigger">
+        <span id="countryLabel">Select a country</span>
+        <svg width="16" height="16" viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M5 7l5 5 5-5H5z" fill="currentColor"/>
+        </svg>
+      </button>
+      <div class="dropdown-menu" id="countryMenu">
+        <div class="dropdown-item" data-value="us">
+          <span>United States</span><small>US</small>
+        </div>
+        <div class="dropdown-item" data-value="de">
+          <span>Germany</span><small>DE</small>
+        </div>
+        <div class="dropdown-item" data-value="uk">
+          <span>United Kingdom</span><small>UK</small>
+        </div>
+        <div class="dropdown-item" data-value="ca">
+          <span>Canada</span><small>CA</small>
+        </div>
+        <div class="dropdown-item" data-value="au">
+          <span>Australia</span><small>AU</small>
+        </div>
+        <div class="dropdown-item" data-value="jp">
+          <span>Japan</span><small>JP</small>
+        </div>
+        <div class="dropdown-item" data-value="kr">
+          <span>South Korea</span><small>KR</small>
+        </div>
+        <div class="dropdown-item" data-value="sg">
+          <span>Singapore</span><small>SG</small>
+        </div>
+        <div class="dropdown-item" data-value="fr">
+          <span>France</span><small>FR</small>
+        </div>
+        <div class="dropdown-item" data-value="es">
+          <span>Spain</span><small>ES</small>
+        </div>
+      </div>
+    </div>
 
     <label for="gross">Annual gross salary (in local currency)</label>
     <input id="gross" type="number" placeholder="e.g. 80000" />
@@ -170,43 +274,102 @@
   </table>
 
   <script>
-    // 1) URL에서 country 파라미터 읽기 (?country=us 같은 것)
+    // URL에서 country 파라미터 읽기 (?country=us 같은 것)
     function getCountryFromQuery() {
       const params = new URLSearchParams(window.location.search);
       const c = params.get('country');
       return c ? c.toLowerCase() : null;
     }
 
-    // 2) 매우 단순화된 국가별 세율 설정 (대략적인 감만 보기용)
+    // 매우 단순화된 국가별 세율 설정 (대략적인 감만 보기용)
     const taxConfig = {
-      us: { name: "United States", taxRate: 0.24, socialRate: 0.10 },
-      de: { name: "Germany",       taxRate: 0.30, socialRate: 0.20 },
-      uk: { name: "United Kingdom",taxRate: 0.28, socialRate: 0.12 },
-      ca: { name: "Canada",        taxRate: 0.26, socialRate: 0.12 },
-      au: { name: "Australia",     taxRate: 0.25, socialRate: 0.10 },
-      jp: { name: "Japan",         taxRate: 0.22, socialRate: 0.13 },
-      kr: { name: "South Korea",   taxRate: 0.22, socialRate: 0.09 },
-      sg: { name: "Singapore",     taxRate: 0.12, socialRate: 0.07 },
-      fr: { name: "France",        taxRate: 0.28, socialRate: 0.20 },
-      es: { name: "Spain",         taxRate: 0.24, socialRate: 0.16 },
+      us: { name: "United States",   taxRate: 0.24, socialRate: 0.10 },
+      de: { name: "Germany",         taxRate: 0.30, socialRate: 0.20 },
+      uk: { name: "United Kingdom",  taxRate: 0.28, socialRate: 0.12 },
+      ca: { name: "Canada",          taxRate: 0.26, socialRate: 0.12 },
+      au: { name: "Australia",       taxRate: 0.25, socialRate: 0.10 },
+      jp: { name: "Japan",           taxRate: 0.22, socialRate: 0.13 },
+      kr: { name: "South Korea",     taxRate: 0.22, socialRate: 0.09 },
+      sg: { name: "Singapore",       taxRate: 0.12, socialRate: 0.07 },
+      fr: { name: "France",          taxRate: 0.28, socialRate: 0.20 },
+      es: { name: "Spain",           taxRate: 0.24, socialRate: 0.16 },
     };
-
     const genericConfig = { taxRate: 0.25, socialRate: 0.15 };
 
-    function initCountrySelect() {
+    function initCountryFromSelect() {
+      const select = document.getElementById("country");
+      const triggerLabel = document.getElementById("countryLabel");
+      if (!select || !triggerLabel) return;
+
+      const selectedOption = select.options[select.selectedIndex];
+      if (selectedOption) {
+        triggerLabel.textContent = selectedOption.textContent;
+      }
+    }
+
+    function initCountryFromQuery() {
       const select = document.getElementById("country");
       const fromQuery = getCountryFromQuery();
-      if (!fromQuery) return;
+      if (!fromQuery || !select) return;
       for (let i = 0; i < select.options.length; i++) {
         if (select.options[i].value.toLowerCase() === fromQuery) {
           select.selectedIndex = i;
           break;
         }
       }
+      initCountryFromSelect();
+    }
+
+    // 커스텀 드롭다운 초기화
+    function initDropdown() {
+      const dropdown = document.getElementById("countryDropdown");
+      const trigger = document.getElementById("countryTrigger");
+      const menu = document.getElementById("countryMenu");
+      const label = document.getElementById("countryLabel");
+      const select = document.getElementById("country");
+      if (!dropdown || !trigger || !menu || !label || !select) return;
+
+      // 기본 라벨 세팅
+      initCountryFromSelect();
+
+      trigger.addEventListener("click", function() {
+        dropdown.classList.toggle("open");
+      });
+
+      // 옵션 클릭 시
+      const items = menu.querySelectorAll(".dropdown-item");
+      items.forEach(function(item) {
+        item.addEventListener("click", function() {
+          const value = item.getAttribute("data-value");
+          const text = item.querySelector("span").textContent;
+
+          // 숨겨진 select 값 변경
+          for (let i = 0; i < select.options.length; i++) {
+            if (select.options[i].value === value) {
+              select.selectedIndex = i;
+              break;
+            }
+          }
+
+          // 라벨 변경
+          label.textContent = text;
+
+          // 메뉴 닫기
+          dropdown.classList.remove("open");
+        });
+      });
+
+      // 바깥 클릭 시 메뉴 닫기
+      document.addEventListener("click", function(e) {
+        if (!dropdown.contains(e.target)) {
+          dropdown.classList.remove("open");
+        }
+      });
     }
 
     function calculateNet() {
-      const countryCode = document.getElementById("country").value.toLowerCase();
+      const select = document.getElementById("country");
+      const countryCode = select.value.toLowerCase();
       const gross = parseFloat(document.getElementById("gross").value || "0");
       const type = document.getElementById("type").value;
       const result = document.getElementById("result");
@@ -243,8 +406,10 @@
       `;
     }
 
-    window.onload = initCountrySelect;
+    window.onload = function() {
+      initCountryFromQuery();  // URL ?country=xx 반영
+      initDropdown();          // 커스텀 드롭다운 세팅
+    };
   </script>
 </body>
 </html>
-
