@@ -72,6 +72,30 @@
       padding: 6px 8px;
       text-align: left;
     }
+    <style>
+  select {
+    color: #000 !important;          /* 선택된 옵션 텍스트 */
+    background: #fff !important;     /* 박스 배경 */
+  }
+
+  select option {
+    color: #000 !important;          /* 옵션 리스트 텍스트 */
+    background: #fff !important;     /* 옵션 배경 */
+  }
+
+  /* 다크모드 충돌 방지 */
+  @media (prefers-color-scheme: dark) {
+    select {
+      color: #fff !important;
+      background: #222 !important;
+    }
+    select option {
+      color: #fff !important;
+      background: #222 !important;
+    }
+  }
+</style>
+
   </style>
 </head>
 <body>
@@ -223,3 +247,4 @@
   </script>
 </body>
 </html>
+
